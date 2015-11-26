@@ -2,25 +2,21 @@ package com.google.appengine.demos.guestbook;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.Index;
 
-import java.util.Date;
-
-@Entity
-public class Greeting {
+@Entity public class Greeting {
 
     @Id public String id;
 
     public String email;
     public String text;
-    @Index public Date date;
+    public Long created;
 
-    public Greeting(String email, String text, Date date) {
-        this.id = email + "." + date.getTime();
-        this.email = email;
-        this.text = text;
-        this.date = date;
+    public Greeting() {
+
     }
 
+    public void setId(){
+        this.id = this.email + "." + this.created;
+    }
 
 }

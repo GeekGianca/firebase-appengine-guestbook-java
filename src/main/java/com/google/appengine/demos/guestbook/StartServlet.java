@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -51,22 +50,21 @@ public class StartServlet extends HttpServlet {
             // Retrieve new posts as they are added to the database
             @Override public void onChildAdded(DataSnapshot snapshot, String previousChildKey) {
                 log.info("Child added...");
-                String email = (String) snapshot.child("email").getValue();
-                String text = (String) snapshot.child("text").getValue();
-                Long created = (Long) snapshot.child("created").getValue();
+                Greeting newGreeting = snapshot.getValue(Greeting.class);
+                log.info(newGreeting.toString());
                 //Check if already stored
                 ObjectifyService.begin();
-                Greeting existing =
-                    ObjectifyService.ofy().load().type(Greeting.class).id(email + "." + created)
-                        .now();
+                Greeting existing = ObjectifyService.ofy().load().type(Greeting.class)
+                    .id(newGreeting.email + "." + newGreeting.created).now();
                 if (existing == null) {
                     log.info("New greeting, storing and emailing it");
-                    Greeting greeting = new Greeting(email, text, new Date(created));
-                    ObjectifyService.ofy().save().entity(greeting).now();
+                    newGreeting.setId();
+                    ObjectifyService.ofy().save().entity(newGreeting).now();
                     //Now Send the email
                     final StringBuilder greetingMessage = new StringBuilder();
-                    greetingMessage.append("Hello!\n\nYou have signed the guestbook, here is a copy for your records:\n\n");
-                    greetingMessage.append(text);
+                    greetingMessage.append(
+                        "Hello!\n\nYou have signed the guestbook, here is a copy for your records:\n\n");
+                    greetingMessage.append(newGreeting.text);
                     greetingMessage.append("\n\nThe Firebase Guestbook Team");
                     Properties props = new Properties();
                     Session session = Session.getDefaultInstance(props, null);
@@ -77,7 +75,7 @@ public class StartServlet extends HttpServlet {
                             new InternetAddress("guestbook@firebase-gae-guestbook.appspotmail.com",
                                 "Firebase Guestbook"));
                         msg.addRecipient(Message.RecipientType.TO,
-                            new InternetAddress(email));
+                            new InternetAddress(newGreeting.email));
                         msg.setSubject("[Firebase Guestbook] You have signed the guestbook");
                         msg.setText(greetingMessage.toString());
                         Transport.send(msg);
@@ -87,6 +85,7 @@ public class StartServlet extends HttpServlet {
                 } else {
                     log.info("Existing greeting, nothing else to do here");
                 }
+
             }
 
             @Override public void onChildChanged(DataSnapshot dataSnapshot, String s) {
