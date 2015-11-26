@@ -2,3 +2,15 @@ body {
     font-family: Verdana, Helvetica, sans-serif;
     background-color: #FFFFCC;
 }
+
+.msg {
+    margin: 10px 0;
+    padding: 10px;
+    width: 400px;
+    background-color: #efefef;
+}
+
+.me {
+    background-color: #cdcdcd;
+    text-align: right;
+}
